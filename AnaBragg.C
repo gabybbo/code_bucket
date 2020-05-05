@@ -1,7 +1,14 @@
+/* TODO: implement baseline calculation
+ * TODO: gauss fit (manual) integral peak (easy for h press less for lower pres)
+ * TODO: vmax with and without integral discriminant? yes to show it is integral independent?
+ * TODO: implement event selection function based on criteria
+ */
+
 #include <Riostream.h>
 #include <stdlib.h>
 #include <TROOT.h>
 #include <TSystem.h>
+#include <TRandom.h>
 #include "TNtuple.h"
 #include "TFile.h"
 #include "TTree.h"
@@ -90,7 +97,7 @@ int AnaBragg(const char *filename, int intto=128, float blfix=13, int nsig=0) {
       integral += (signal.s[j] - blfix); // somma eventi
       if ( (signal.s[j] - blfix) > vmax ) vmax = (signal.s[j] - blfix); // calcolo vmax
     }
-    integral += gRandom->Rndm(); //perchè?
+    integral += gRandom->Rndm(); // serve per conversione a float da int, contrario del troncamento
 
     // DA IMPLEMENTARE:
     
