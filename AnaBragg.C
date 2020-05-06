@@ -1,5 +1,4 @@
-/* TODO: implement baseline calculation
- * TODO: gauss fit (manual) integral peak (easy for h press less for lower pres)
+/* TODO: gauss fit (manual) integral peak (easy for h press less for lower pres)
  * TODO: vmax with and without integral discriminant? yes to show it is integral independent?
  * TODO: implement event selection function based on criteria
  */
@@ -16,6 +15,8 @@
 #include "TGraph.h"
 #include "TGraphErrors.h"
 #include "TF1.h"
+#include "TMath.h"
+#include <vector>
 
 #ifndef LABNUC
 #define LABNUC
@@ -24,7 +25,7 @@ struct bragg_signal {
 };
 #endif
 
-int AnaBragg(const char *filename, int intto=128, float blfix=13, int nsig=0) {
+int AnaBragg(const char *filename, int intto=128, int nsig=0) {
 
   // APERTURA FILE E LETTURA CONTENUTI
 
@@ -58,15 +59,17 @@ int AnaBragg(const char *filename, int intto=128, float blfix=13, int nsig=0) {
   float thr_frac = 0.4; // soglia rispetto al vmax per il calcolo della larghezza
   int intfrom = 0;// regione di integrazione da 0 a intto
   if (intto>128) intto=128;
-  int blfrom = 108, blto = 128; // regione per il calcolo della baseline
+  int blfrom = 85, blto = 128; // regione per il calcolo della baseline (verificato)
 
-
+  // valori da salvare nella ntupla
   float bl; // baseline evento x evento
+  float bl_sigma; // dev standard su calcolo baseline (come valore medio) evento x evento ?save
+  float bl_err; // err di bl: dev standard/sqrt(n) ?save
   float integral; // integrale di carica
   float vmax; // massimo relativo alla bl
   float width; // larghezza temporale dei segnali
 
-
+  // file di output
   char outfilename[200];
   strcpy(outfilename,"anabragg_");
   const char *cc=strrchr(filename,'/');
@@ -79,6 +82,48 @@ int AnaBragg(const char *filename, int intto=128, float blfix=13, int nsig=0) {
 
   int maxev=nev;
   if (nsig && nsig<nev) maxev=nsig; // controllo sul massimo di eventi
+
+  // PRIMO LOOP PER CALCOLO BASELINE
+
+  // array per salvare valori di bl da scrivere poi su il tree
+  float* bl_arr = new float[maxev];
+
+  // variabili per ricavare una stima unica del valore della baseline per questo dataset
+  float sum_bl = 0;
+  float sum_err_bl = 0;
+
+  for (int j=0; j<maxev; j++){
+      br->GetEntry(j); // recupero evento
+
+      //calcolo della baseline
+      float bl_sum=0;
+      float bl_sum2=0;
+
+      for(int i=blfrom; i<blto; i++){
+          bl_sum+=signal.s[i];
+          bl_sum2+=signal.s[i]*signal.s[i];
+
+      }
+
+      bl=1.0*bl_sum/(blto-blfrom); // baseline dell'evento j-esimo
+      bl_sigma=TMath::Sqrt((bl_sum2-1.0*bl*bl*(blto-blfrom))/(blto-blfrom-1)); // j-esima dev st
+      bl_err=bl_sigma/TMath::Sqrt(blto-blfrom);
+
+      bl_arr[j]=bl; //salvo valori di ciascun evento nell' array
+
+      //aggiorno somme per calcolo della bl_avg:
+      sum_bl+= bl/(bl_err*bl_err);
+      sum_err_bl+= 1/(bl_err*bl_err);
+
+  }
+
+  // calcolo del valore medio (media pesata)
+
+  float bl_avg = sum_bl/sum_err_bl;
+  float bl_avg_err = TMath::Sqrt(1/sum_err_bl);
+
+  std::cout << "baseline media = " << bl_avg << "+-" << bl_avg_err << std::endl;
+
   
   // LOOP SUGLI EVENTI
   for (int i=0; i<maxev; i++) {
@@ -87,22 +132,20 @@ int AnaBragg(const char *filename, int intto=128, float blfix=13, int nsig=0) {
     br->GetEntry(i);
 
     // inizializza a zero
-    bl=0; 
+    bl=bl_arr[i]; //carico il valore calcolato in precedenza per salvarlo nella ntupla
     integral=0;
     vmax=0;				     
     width=0;
     
     // calcolo integrali e vmax
     for (int j=intfrom; j<intto; j++) {
-      integral += (signal.s[j] - blfix); // somma eventi
-      if ( (signal.s[j] - blfix) > vmax ) vmax = (signal.s[j] - blfix); // calcolo vmax
+      integral += (signal.s[j] - bl_avg); // somma eventi
+      if ( (signal.s[j] - bl_avg) > vmax ) vmax = (signal.s[j] - bl_avg); // calcolo vmax
     }
     integral += gRandom->Rndm(); // serve per conversione a float da int, contrario del troncamento
 
     // DA IMPLEMENTARE:
     
-    // CALCOLO DELLA BASELINE
-    // ...
 
     // CALCOLO DELLA LARGHEZZA DEL SEGNALE A UNA CERTA PERCENTUALE DEL VMAX
     // ...
