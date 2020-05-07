@@ -56,15 +56,13 @@ int AnaBragg(const char *filename, int intto=128, int nsig=0) {
   // ANALIZZA EVENTO x EVENTO
 
   // altri parametri iniziali DA VERIFICARE ED EVENTUALMENTE MODIFICARE
-  float thr_frac = 0.4; // soglia rispetto al vmax per il calcolo della larghezza
+  float thr_frac = 0.3; // soglia rispetto al vmax per il calcolo della larghezza
   int intfrom = 0;// regione di integrazione da 0 a intto
   if (intto>128) intto=128;
   int blfrom = 85, blto = 128; // regione per il calcolo della baseline (verificato)
 
   // valori da salvare nella ntupla
   float bl; // baseline evento x evento
-  float bl_sigma; // dev standard su calcolo baseline (come valore medio) evento x evento ?save
-  float bl_err; // err di bl: dev standard/sqrt(n) ?save
   float integral; // integrale di carica
   float vmax; // massimo relativo alla bl
   float width; // larghezza temporale dei segnali
@@ -106,8 +104,8 @@ int AnaBragg(const char *filename, int intto=128, int nsig=0) {
       }
 
       bl=1.0*bl_sum/(blto-blfrom); // baseline dell'evento j-esimo
-      bl_sigma=TMath::Sqrt((bl_sum2-1.0*bl*bl*(blto-blfrom))/(blto-blfrom-1)); // j-esima dev st
-      bl_err=bl_sigma/TMath::Sqrt(blto-blfrom);
+      float bl_sigma=TMath::Sqrt((bl_sum2-1.0*bl*bl*(blto-blfrom))/(blto-blfrom-1)); // j-dev std
+      float bl_err=bl_sigma/TMath::Sqrt(blto-blfrom);
 
       bl_arr[j]=bl; //salvo valori di ciascun evento nell' array
 
@@ -136,19 +134,43 @@ int AnaBragg(const char *filename, int intto=128, int nsig=0) {
     integral=0;
     vmax=0;				     
     width=0;
+
+    int pos_max=0; // posizione temporale del massimo
     
     // calcolo integrali e vmax
     for (int j=intfrom; j<intto; j++) {
       integral += (signal.s[j] - bl_avg); // somma eventi
-      if ( (signal.s[j] - bl_avg) > vmax ) vmax = (signal.s[j] - bl_avg); // calcolo vmax
+      if ( (signal.s[j] - bl_avg) > vmax ){
+          vmax = (signal.s[j] - bl_avg); // calcolo vmax
+          pos_max = j;
+      }
     }
     integral += gRandom->Rndm(); // serve per conversione a float da int, contrario del troncamento
 
-    // DA IMPLEMENTARE:
-    
+    // calcolo width:
 
-    // CALCOLO DELLA LARGHEZZA DEL SEGNALE A UNA CERTA PERCENTUALE DEL VMAX
-    // ...
+    int t_start=0;
+    int t_end=0;
+    float v_target=vmax*thr_frac;
+
+    for (int j=intfrom; j<pos_max; j++){
+        if((signal.s[j]-bl_avg) <= v_target) {
+            t_start=j;
+        }
+    }
+
+    t_start+=0.5; //media con punto successivo che potrebbe essere più vicino a v_target
+
+    for (int j=pos_max; j<intto; j++){
+        if(((signal.s[j]-bl_avg) >= v_target)) {
+            t_end=j;
+        }
+    }
+
+    t_end+=0.5; //media con punto successivo che potrebbe essere più vicino a v_target
+
+    width=t_end-t_start;
+    width/=10; // conversione in us
 
     nt->Fill(i,vmax,integral,width,bl);
   }
