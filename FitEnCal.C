@@ -57,6 +57,13 @@ void FitEnCal(const char* fname) {
     std::cout << "chi2 : " << chi2 << std::endl;
     std::cout << "chi2/dof :" << chi2/(r->Ndf()) << std::endl;
 
+    float sigmay_post = 0;
+    for(int i=0; i<g->GetN(); i++) {
+        sigmay_post+= (g->GetY()[i] - f1->Eval(g->GetX()[i]))*(g->GetY()[i] - f1->Eval(g->GetX()[i]));
+    }
+    sigmay_post = TMath::Sqrt(sigmay_post/(g->GetN()-2));
+    std::cout << "SIGMAY " << sigmay_post << std::endl;
+
 
     TGraphErrors *gr = new TGraphErrors(fname); // parte da una copia del grafico originale
     for (int i=0; i<g->GetN(); i++) {
