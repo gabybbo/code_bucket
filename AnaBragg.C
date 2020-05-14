@@ -1,7 +1,5 @@
-/* TODO: gauss fit (manual) integral peak (easy for h press less for lower pres)
- * TODO: vmax with and without integral discriminant? yes to show it is integral independent?
- * TODO: implement event selection function based on criteria
- */
+
+// TODO: vmax with and without integral discriminant? yes to show it is integral independent?
 
 #include <Riostream.h>
 #include <stdlib.h>
