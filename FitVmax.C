@@ -13,19 +13,19 @@ double fitf(double *x, double *par) {
     return fitval;
 }
 
-void FitEnCal(const char* fname) {
+void FitRange(const char* fname) {
 
     // crea l'oggetto GRAFICO CON ERRORI leggendo da file di testo
     TGraphErrors *g = new TGraphErrors(fname);
-    g->SetName("EnCal");
+    g->SetName("FitVmax");
     // formattazione del grafico con comandi testuali
     g->SetMarkerColor(4);
     g->SetMarkerStyle(20);
-    g->SetTitle("Energy Calibration");
-    g->GetXaxis()->SetTitle("Alpha energy [keV]");
+    g->SetTitle("Plot Vmax vs P");
+    g->GetXaxis()->SetTitle("P [mbar]");
     g->GetXaxis()->SetTitleSize(0.04);
     //g->GetXaxis()->CenterTitle();
-    g->GetYaxis()->SetTitle("Integrated charge [a.u.]");
+    g->GetYaxis()->SetTitle("Vmax [a.u.]");
     g->GetYaxis()->SetTitleSize(0.04);
     //g->GetYaxis()->CenterTitle();
 
@@ -79,11 +79,11 @@ void FitEnCal(const char* fname) {
     // formattazione del grafico con comandi testuali
     gr->SetMarkerColor(4);
     gr->SetMarkerStyle(20);
-    gr->SetTitle("Energy Calibration, residui");
-    gr->GetXaxis()->SetTitle("Alpha energy [keV]");
+    gr->SetTitle("Plot Vmax vs P, residui");
+    gr->GetXaxis()->SetTitle("P [mbar]");
     gr->GetXaxis()->SetTitleSize(0.04);
     //gr->GetXaxis()->CenterTitle();
-    gr->GetYaxis()->SetTitle("Integrated charge [a.u.]");
+    gr->GetYaxis()->SetTitle("Vmax [a.u.]");
     gr->GetYaxis()->SetTitleSize(0.04);
     //gr->GetYaxis()->CenterTitle();
 
@@ -102,8 +102,8 @@ void FitEnCal(const char* fname) {
     // formattazione del grafico con comandi testuali
     grn->SetMarkerColor(4);
     grn->SetMarkerStyle(20);
-    grn->SetTitle("Energy Calibration, residui normalizzati");
-    grn->GetXaxis()->SetTitle("Alpha energy [keV]");
+    grn->SetTitle("Plot Vmax vs P, residui normalizzati");
+    grn->GetXaxis()->SetTitle("P [mbar]");
     grn->GetXaxis()->SetTitleSize(0.04);
     //grn->GetXaxis()->CenterTitle();
     grn->GetYaxis()->SetTitle("res/#sigma_{res} [a.u./a.u.]");
@@ -125,5 +125,7 @@ void FitEnCal(const char* fname) {
     }
 
 }
+
+
 
 
