@@ -13,7 +13,7 @@ double fitf(double *x, double *par) {
     return fitval;
 }
 
-void FitRange(const char* fname) {
+void FitVmax(const char* fname) {
 
     // crea l'oggetto GRAFICO CON ERRORI leggendo da file di testo
     TGraphErrors *g = new TGraphErrors(fname);
